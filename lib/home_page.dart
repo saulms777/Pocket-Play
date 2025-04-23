@@ -8,34 +8,35 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final String _title = 'Pocket Play';
-  int _counter = 0;
-
-  void _incrementCounter() => setState(() => _counter++);
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(_title),
+        title: const Text('Pocket Play'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: CustomScrollView(
+        primary: false,
+        slivers: <Widget>[
+          SliverPadding(
+            padding: const EdgeInsets.all(20),
+            sliver: SliverGrid.count(
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              crossAxisCount: 2,
+              children: <Widget>[
+                // Pong
+                InkWell(
+                  onTap: () => Navigator.pushNamed(context, 'pong'),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    child: Image.asset('assets/images/pong_icon.png'),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
