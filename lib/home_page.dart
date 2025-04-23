@@ -19,7 +19,7 @@ class _HomePageState extends State<HomePage> {
         primary: false,
         slivers: <Widget>[
           SliverPadding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(0),
             sliver: SliverGrid.count(
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
