@@ -18,18 +18,18 @@ class _PongGameState extends State<PongGame>
   static const double _puckSize = 20;
   static const double _puckSpeed = 3;
 
-  static double _screenWidth = -1;
-  static double _screenHeight = -1;
-
+  bool _initialized = false;
+  double _screenWidth = -1;
+  double _screenHeight = -1;
+  late Ticker _ticker;
   late _Rectangle _player1;
   late _Rectangle _player2;
   late _Rectangle _puck;
-
-  late Ticker _ticker;
   double _puckDx = 1;
   double _puckDy = 1;
 
   void _initialize(BuildContext context) {
+    _initialized = true;
     _screenWidth = MediaQuery.of(context).size.width;
     _screenHeight = MediaQuery.of(context).size.height - kToolbarHeight;
     _player1 = _Rectangle(
@@ -111,7 +111,7 @@ class _PongGameState extends State<PongGame>
 
   @override
   Widget build(BuildContext context) {
-    if (_screenWidth == -1) _initialize(context);
+    if (!_initialized) _initialize(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -131,7 +131,27 @@ class _PongGameState extends State<PongGame>
               size: Size(
                 _screenWidth, 10
               ),
-              painter: _DottedLinePainter(),
+              painter: _DottedLinePainter(0, _screenHeight / 2, 20, 10),
+            ),
+            Positioned(
+              left: 10,
+              top: _screenHeight / 2 - 60,
+              child: Text(
+                _player1.score.toString(),
+                style: TextStyle(
+                  fontSize: 48,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 10,
+              top: _screenHeight / 2,
+              child: Text(
+                _player2.score.toString(),
+                style: TextStyle(
+                  fontSize: 48,
+                ),
+              ),
             ),
             Positioned(
               left: _puck.left,
@@ -171,6 +191,7 @@ class _PongGameState extends State<PongGame>
 }
 
 class _Rectangle {
+  double score = 0;
   double left;
   double top;
   final double width;
@@ -182,21 +203,23 @@ class _Rectangle {
 }
 
 class _DottedLinePainter extends CustomPainter {
+  final double x;
+  final double y;
+  final double dashWidth;
+  final double dashSpace;
+  _DottedLinePainter(this.x, this.y, this.dashWidth, this.dashSpace);
+
   @override
   void paint(Canvas canvas, Size size) {
     Paint paint = Paint()
       ..color = Colors.black
       ..strokeWidth = 10;
 
-    double dashWidth = 20;
-    double dashSpace = 10;
-    double startX = 0;
-    double height = _PongGameState._screenHeight / 2 - 5;
-
+    double startX = x;
     while (startX < size.width) {
       canvas.drawLine(
-        Offset(startX, height + size.height / 2),
-        Offset(startX + dashWidth, height + size.height / 2),
+        Offset(startX, y + size.height / 2),
+        Offset(startX + dashWidth, y + size.height / 2),
         paint,
       );
       startX += dashWidth + dashSpace;
