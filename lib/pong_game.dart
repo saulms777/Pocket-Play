@@ -69,7 +69,6 @@ class _PongGameState extends State<PongGame>
       _puck.top += _puckDy;
 
       bool outOfBoundsX = _puck.left <= 0 || _puck.right >= _screenWidth;
-      bool outOfBoundsY = _puck.top <= 0 || _puck.bottom >= _screenHeight;
       bool player1FrontCollide =
           _puck.top == _player1.bottom &&
           _puck.right > _player1.left && _puck.left < _player1.right;
@@ -84,13 +83,29 @@ class _PongGameState extends State<PongGame>
           (_puck.right == _player2.left.roundToDouble() ||
               _puck.left == _player2.right.roundToDouble()) &&
           _puck.top < _player2.bottom && _puck.bottom > _player2.top;
-
       if (outOfBoundsX || player1SideCollide || player2SideCollide) {
         _puckDx *= -1;
       }
-      if (outOfBoundsY || player1FrontCollide || player2FrontCollide ||
+      if (player1FrontCollide || player2FrontCollide ||
           player1SideCollide || player2SideCollide) {
         _puckDy *= -1;
+      }
+
+      if (_puck.bottom >= _screenHeight) {
+        _player1.score++;
+        _puck = _Rectangle(
+            ((_screenWidth - _puckSize) / 2).roundToDouble(),
+            ((_screenHeight - _puckSize) / 2).roundToDouble(),
+            _puckSize, _puckSize
+        );
+      }
+      if (_puck.top <= 0) {
+        _player2.score++;
+        _puck = _Rectangle(
+            ((_screenWidth - _puckSize) / 2).roundToDouble(),
+            ((_screenHeight - _puckSize) / 2).roundToDouble(),
+            _puckSize, _puckSize
+        );
       }
     }
   }
