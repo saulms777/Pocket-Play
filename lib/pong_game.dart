@@ -31,7 +31,7 @@ class _PongGameState extends State<PongGame>
   void _initialize(BuildContext context) {
     _initialized = true;
     _screenWidth = MediaQuery.of(context).size.width;
-    _screenHeight = MediaQuery.of(context).size.height - kToolbarHeight;
+    _screenHeight = MediaQuery.of(context).size.height;
     _player1 = _Rectangle(
         (_screenWidth - _platformWidth) / 2,
         _platformSpacing,
@@ -63,11 +63,13 @@ class _PongGameState extends State<PongGame>
     setState(() {});
   }
 
-  void _movePuck() {
+  void _updateGame() {
     for (int i = 0; i < _puckSpeed; i++) {
+      // Move puck
       _puck.left += _puckDx;
       _puck.top += _puckDy;
 
+      // Check for puck collision
       bool outOfBoundsX = _puck.left <= 0 || _puck.right >= _screenWidth;
       bool player1FrontCollide =
           _puck.top == _player1.bottom &&
@@ -91,6 +93,7 @@ class _PongGameState extends State<PongGame>
         _puckDy *= -1;
       }
 
+      // Check for score
       if (_puck.bottom >= _screenHeight) {
         _player1.score++;
         _puck = _Rectangle(
@@ -107,13 +110,25 @@ class _PongGameState extends State<PongGame>
             _puckSize, _puckSize
         );
       }
+
+      // Check for win
+      if (_player1.score == 10) {
+        _ticker.stop();
+        _player1.message = 'You Win!';
+        _player2.message = 'You Lose!';
+      }
+      else if (_player2.score == 10) {
+        _ticker.stop();
+        _player1.message = 'You Lose!';
+        _player2.message = 'You Win!';
+      }
     }
   }
 
   @override
   void initState() {
     super.initState();
-    _ticker = createTicker((Duration elapsed) => setState(() => _movePuck()));
+    _ticker = createTicker((Duration elapsed) => setState(() => _updateGame()));
     _ticker.start();
   }
 
@@ -128,46 +143,79 @@ class _PongGameState extends State<PongGame>
   Widget build(BuildContext context) {
     if (!_initialized) _initialize(context);
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Pong'),
-      ),
       body: Listener(
         onPointerDown: (PointerDownEvent event) =>
             _onClick(event.localPosition.dx, event.localPosition.dy),
         child: Stack(
           children: [
+            // Background
             Container(
               color: Colors.transparent,
               width: double.infinity,
               height: double.infinity,
             ),
+
+            // Dotted line
             CustomPaint(
               size: Size(
                 _screenWidth, 10
               ),
-              painter: _DottedLinePainter(0, _screenHeight / 2, 20, 10),
+              painter: _DottedLinePainter(0, _screenHeight / 2 - 5, 20, 10),
             ),
+
+            // Back button
             Positioned(
-              left: 10,
-              top: _screenHeight / 2 - 60,
-              child: Text(
-                _player1.score.toString(),
-                style: TextStyle(
-                  fontSize: 48,
+              left: 0,
+              bottom: 0,
+              child: RotatedBox(
+                quarterTurns: 3,
+                child: TextButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: Colors.black,
+                  ),
+                  label: Text(
+                    'Back',
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
                 ),
               ),
             ),
+
+            // Player 1 score
             Positioned(
-              left: 10,
-              top: _screenHeight / 2,
-              child: Text(
-                _player2.score.toString(),
-                style: TextStyle(
-                  fontSize: 48,
+              left: 0,
+              bottom: _screenHeight / 2 + 20,
+              child: RotatedBox(
+                quarterTurns: 3,
+                child: Text(
+                  _player1.score.toString(),
+                  style: TextStyle(
+                    fontSize: 48,
+                  ),
                 ),
               ),
             ),
+
+            // Player 2 score
+            Positioned(
+              left: 0,
+              top: _screenHeight / 2 + 20,
+              child: RotatedBox(
+                quarterTurns: 3,
+                child: Text(
+                  _player2.score.toString(),
+                  style: TextStyle(
+                    fontSize: 48,
+                  ),
+                ),
+              ),
+            ),
+
+            // Puck
             Positioned(
               left: _puck.left,
               top: _puck.top,
@@ -180,6 +228,8 @@ class _PongGameState extends State<PongGame>
                 ),
               ),
             ),
+
+            // Player 1 paddle
             Positioned(
               left: _player1.left,
               top: _player1.top,
@@ -189,6 +239,8 @@ class _PongGameState extends State<PongGame>
                 color: Colors.black,
               ),
             ),
+
+            // Player 2 paddle
             Positioned(
               left: _player2.left,
               top: _player2.top,
@@ -196,6 +248,43 @@ class _PongGameState extends State<PongGame>
                 width: _player2.width,
                 height: _player2.height,
                 color: Colors.black,
+              ),
+            ),
+
+            // Player 1 end screen
+            Positioned(
+              width: _screenWidth,
+              height: _screenHeight / 2,
+              child: Container(
+                alignment: Alignment.center,
+                child: RotatedBox(
+                  quarterTurns: 3,
+                  child: Text(
+                    _player1.message,
+                    style: TextStyle(
+                      fontSize: 36,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Player 2 end screen
+            Positioned(
+              top: _screenHeight / 2,
+              width: _screenWidth,
+              height: _screenHeight / 2,
+              child: Container(
+                alignment: Alignment.center,
+                child: RotatedBox(
+                  quarterTurns: 3,
+                  child: Text(
+                    _player2.message,
+                    style: TextStyle(
+                      fontSize: 36,
+                    ),
+                  ),
+                ),
               ),
             ),
           ],
@@ -207,6 +296,7 @@ class _PongGameState extends State<PongGame>
 
 class _Rectangle {
   double score = 0;
+  String message = '';
   double left;
   double top;
   final double width;
