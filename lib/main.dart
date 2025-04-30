@@ -14,7 +14,9 @@ class MainApplication extends StatelessWidget {
     return MaterialApp(
       title: 'Pocket Play',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orangeAccent),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.orangeAccent,
+        ),
       ),
       initialRoute: 'home',
       routes: {

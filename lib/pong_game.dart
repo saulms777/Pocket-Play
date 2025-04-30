@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -16,40 +17,54 @@ class _PongGameState extends State<PongGame>
   static const double _platformWidth = 100;
   static const double _platformHeight = 10;
   static const double _puckSize = 20;
-  static const double _puckSpeed = 3;
+  static const double _puckSpeed = 5;
+  static final Random _random = Random();
 
   bool _initialized = false;
-  double _screenWidth = -1;
-  double _screenHeight = -1;
+  late double _screenWidth;
+  late double _screenHeight;
+
+  late Timer _startTimer;
+  late int _countdown;
+  late String _countdownMsg;
+  late bool _finished = false;
+
   late Ticker _ticker;
-  late _Rectangle _player1;
-  late _Rectangle _player2;
-  late _Rectangle _puck;
-  double _puckDx = 1;
-  double _puckDy = 1;
+  late _Player _player1;
+  late _Player _player2;
+  late _Player _puck;
+  late double _puckDx;
+  late double _puckDy;
 
   void _initialize(BuildContext context) {
     _initialized = true;
     _screenWidth = MediaQuery.of(context).size.width;
     _screenHeight = MediaQuery.of(context).size.height;
-    _player1 = _Rectangle(
+
+    _countdown = 3;
+    _countdownMsg = '3';
+
+    _player1 = _Player(
         (_screenWidth - _platformWidth) / 2,
         _platformSpacing,
         _platformWidth, _platformHeight
     );
-    _player2 = _Rectangle(
+    _player2 = _Player(
         (_screenWidth - _platformWidth) / 2,
         _screenHeight.toInt() - _platformSpacing - _platformHeight,
         _platformWidth, _platformHeight
     );
-    _puck = _Rectangle(
+    _puck = _Player(
         ((_screenWidth - _puckSize) / 2).roundToDouble(),
         ((_screenHeight - _puckSize) / 2).roundToDouble(),
         _puckSize, _puckSize
     );
+    _puckDx = _random.nextBool() ? 1 : -1;
+    _puckDy = _random.nextBool() ? 1 : -1;
   }
 
   void _onClick(double x, double y) {
+    if (!_ticker.isActive) return;
     x = max(x, _platformWidth / 2);
     x = min(x, _screenWidth - _platformWidth / 2);
     x -= _platformWidth / 2;
@@ -96,7 +111,7 @@ class _PongGameState extends State<PongGame>
       // Check for score
       if (_puck.bottom >= _screenHeight) {
         _player1.score++;
-        _puck = _Rectangle(
+        _puck = _Player(
             ((_screenWidth - _puckSize) / 2).roundToDouble(),
             ((_screenHeight - _puckSize) / 2).roundToDouble(),
             _puckSize, _puckSize
@@ -104,7 +119,7 @@ class _PongGameState extends State<PongGame>
       }
       if (_puck.top <= 0) {
         _player2.score++;
-        _puck = _Rectangle(
+        _puck = _Player(
             ((_screenWidth - _puckSize) / 2).roundToDouble(),
             ((_screenHeight - _puckSize) / 2).roundToDouble(),
             _puckSize, _puckSize
@@ -114,26 +129,53 @@ class _PongGameState extends State<PongGame>
       // Check for win
       if (_player1.score == 10) {
         _ticker.stop();
+        _finished = true;
+        _puck.remove();
         _player1.message = 'You Win!';
         _player2.message = 'You Lose!';
       }
       else if (_player2.score == 10) {
         _ticker.stop();
+        _finished = true;
+        _puck.remove();
         _player1.message = 'You Lose!';
         _player2.message = 'You Win!';
       }
     }
   }
 
+  void _playAgain() {
+    setState(() {
+      _initialized = false;
+      initState();
+      _finished = false;
+    });
+  }
+
   @override
   void initState() {
-    super.initState();
-    _ticker = createTicker((Duration elapsed) => setState(() => _updateGame()));
-    _ticker.start();
+    if (!_finished) {
+      super.initState();
+      _ticker = createTicker((_) => setState(() => _updateGame()));
+    }
+    _startTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (_countdown == 0) {
+        timer.cancel();
+        _ticker.start();
+        _countdownMsg = '';
+      }
+      else {
+        setState(() {
+          _countdown--;
+          _countdownMsg = _countdown == 0 ? 'Play!' : _countdown.toString();
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
+    _startTimer.cancel();
     _ticker.stop();
     _ticker.dispose();
     super.dispose();
@@ -162,22 +204,56 @@ class _PongGameState extends State<PongGame>
               ),
               painter: _DottedLinePainter(0, _screenHeight / 2 - 5, 20, 10),
             ),
+            
+            // Countdown
+            Container(
+              alignment: Alignment.bottomRight,
+              padding: EdgeInsets.only(bottom: 10),
+              child: RotatedBox(
+                quarterTurns: 1,
+                child: Text(
+                  _countdownMsg,
+                  style: TextStyle(fontSize: 48),
+                ),
+              ),
+            ),
 
             // Back button
             Positioned(
-              left: 0,
-              bottom: 0,
+              right: 0,
+              top: 0,
               child: RotatedBox(
-                quarterTurns: 3,
+                quarterTurns: 1,
                 child: TextButton.icon(
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(
                     Icons.arrow_back,
                     color: Colors.black,
+                    size: 30,
                   ),
                   label: Text(
                     'Back',
                     style: TextStyle(
+                      fontSize: 30,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // Play again
+            Container(
+              alignment: Alignment.bottomRight,
+              padding: EdgeInsets.only(bottom: 10),
+              child: RotatedBox(
+                quarterTurns: 1,
+                child: TextButton(
+                  onPressed: _finished ? _playAgain : null,
+                  child: Text(
+                    _finished ? 'Play Again' : '',
+                    style: TextStyle(
+                      fontSize: 36,
                       color: Colors.black,
                     ),
                   ),
@@ -187,30 +263,26 @@ class _PongGameState extends State<PongGame>
 
             // Player 1 score
             Positioned(
-              left: 0,
+              right: 0,
               bottom: _screenHeight / 2 + 20,
               child: RotatedBox(
-                quarterTurns: 3,
+                quarterTurns: 1,
                 child: Text(
                   _player1.score.toString(),
-                  style: TextStyle(
-                    fontSize: 48,
-                  ),
+                  style: TextStyle(fontSize: 48),
                 ),
               ),
             ),
 
             // Player 2 score
             Positioned(
-              left: 0,
+              right: 0,
               top: _screenHeight / 2 + 20,
               child: RotatedBox(
-                quarterTurns: 3,
+                quarterTurns: 1,
                 child: Text(
                   _player2.score.toString(),
-                  style: TextStyle(
-                    fontSize: 48,
-                  ),
+                  style: TextStyle(fontSize: 48),
                 ),
               ),
             ),
@@ -258,12 +330,10 @@ class _PongGameState extends State<PongGame>
               child: Container(
                 alignment: Alignment.center,
                 child: RotatedBox(
-                  quarterTurns: 3,
+                  quarterTurns: 1,
                   child: Text(
                     _player1.message,
-                    style: TextStyle(
-                      fontSize: 36,
-                    ),
+                    style: TextStyle(fontSize: 36),
                   ),
                 ),
               ),
@@ -277,12 +347,10 @@ class _PongGameState extends State<PongGame>
               child: Container(
                 alignment: Alignment.center,
                 child: RotatedBox(
-                  quarterTurns: 3,
+                  quarterTurns: 1,
                   child: Text(
                     _player2.message,
-                    style: TextStyle(
-                      fontSize: 36,
-                    ),
+                    style: TextStyle(fontSize: 36),
                   ),
                 ),
               ),
@@ -294,17 +362,18 @@ class _PongGameState extends State<PongGame>
   }
 }
 
-class _Rectangle {
+class _Player {
   double score = 0;
   String message = '';
   double left;
   double top;
   final double width;
   final double height;
-  _Rectangle(this.left, this.top, this.width, this.height);
+  _Player(this.left, this.top, this.width, this.height);
 
   double get right => left + width;
   double get bottom => top + height;
+  void remove() => left = top = double.infinity;
 }
 
 class _DottedLinePainter extends CustomPainter {
