@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'home_page.dart';
-import 'pong_game.dart';
+import 'games/library.dart';
 
 void main() => runApp(const MainApplication());
 
@@ -22,8 +22,9 @@ class MainApplication extends StatelessWidget {
       routes: {
         'home': (context) => HomePage(),
         'pong': (context) => PongGame(),
+        'chess': (context) => ChessGame(),
       },
-      debugShowCheckedModeBanner: false, // temp
+      debugShowCheckedModeBanner: false,
     );
   }
 }

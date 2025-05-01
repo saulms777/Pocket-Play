@@ -199,90 +199,83 @@ class _PongGameState extends State<PongGame>
 
             // Dotted line
             CustomPaint(
-              size: Size(
-                _screenWidth, 10
-              ),
+              size: Size(_screenWidth, 10),
               painter: _DottedLinePainter(0, _screenHeight / 2 - 5, 20, 10),
             ),
-            
+
             // Countdown
             Container(
               alignment: Alignment.bottomRight,
-              padding: EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.only(bottom: 10),
               child: RotatedBox(
                 quarterTurns: 1,
                 child: Text(
                   _countdownMsg,
-                  style: TextStyle(fontSize: 48),
+                  style: TextStyle(fontSize: 40),
                 ),
               ),
             ),
 
             // Back button
-            Positioned(
-              right: 0,
-              top: 0,
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: TextButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: Icon(
-                    Icons.arrow_back,
-                    color: Colors.black,
-                    size: 30,
-                  ),
-                  label: Text(
-                    'Back',
-                    style: TextStyle(
-                      fontSize: 30,
-                      color: Colors.black,
-                    ),
-                  ),
+            Container(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                onPressed: () => Navigator.pushNamed(context, 'home'),
+                icon: const Icon(
+                  Icons.arrow_upward,
+                  size: 30,
+                  color: Colors.black,
                 ),
-              ),
+              )
             ),
 
             // Play again
-            Container(
+            _finished ? Container(
               alignment: Alignment.bottomRight,
-              padding: EdgeInsets.only(bottom: 10),
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: TextButton(
-                  onPressed: _finished ? _playAgain : null,
-                  child: Text(
-                    _finished ? 'Play Again' : '',
-                    style: TextStyle(
-                      fontSize: 36,
-                      color: Colors.black,
-                    ),
+              child: Transform.rotate(
+                angle: pi / 2,
+                child: IconButton(
+                  onPressed: () => _playAgain(),
+                  icon: const Icon(
+                    Icons.replay,
+                    size: 30,
+                    color: Colors.black,
                   ),
                 ),
               ),
-            ),
+            ) : Container(),
 
             // Player 1 score
             Positioned(
-              right: 0,
-              bottom: _screenHeight / 2 + 20,
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: Text(
-                  _player1.score.toString(),
-                  style: TextStyle(fontSize: 48),
+              width: _screenWidth,
+              height: _screenHeight / 2,
+              child: Container(
+                alignment: Alignment.bottomRight,
+                padding: const EdgeInsets.only(bottom: 15),
+                child: RotatedBox(
+                  quarterTurns: 1,
+                  child: Text(
+                    _player1.score.toString(),
+                    style: TextStyle(fontSize: 48),
+                  ),
                 ),
               ),
             ),
 
             // Player 2 score
             Positioned(
-              right: 0,
-              top: _screenHeight / 2 + 20,
-              child: RotatedBox(
-                quarterTurns: 1,
-                child: Text(
-                  _player2.score.toString(),
-                  style: TextStyle(fontSize: 48),
+              width: _screenWidth,
+              height: _screenHeight / 2,
+              top: _screenHeight / 2,
+              child: Container(
+                alignment: Alignment.topRight,
+                padding: const EdgeInsets.only(top: 15),
+                child: RotatedBox(
+                  quarterTurns: 1,
+                  child: Text(
+                    _player2.score.toString(),
+                    style: TextStyle(fontSize: 48),
+                  ),
                 ),
               ),
             ),
