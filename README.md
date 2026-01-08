@@ -1,3 +1,3 @@
 # Pocket Play
 
-A collection of fun minigames.
+A mobile app with a collection of fun minigames.
